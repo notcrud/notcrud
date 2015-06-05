@@ -1,0 +1,168 @@
+#!/usr/bin/env node
+
+var colors = require('colors'),
+	cproc = require('child_process'),
+	argv = require('minimist')(process.argv.slice(2)),
+	fs = require('fs'),
+	async = require('async'),
+	touch = require('touch'),
+	npm = require('npm');
+
+var getRunningPid = function(callback) {
+		fs.readFile(__dirname + '/pidfile', {
+			encoding: 'utf-8'
+		}, function(err, pid) {
+			if (err) {
+				return callback(err);
+			}
+
+			try {
+				process.kill(parseInt(pid, 10), 0);
+				callback(null, parseInt(pid, 10));
+			} catch(e) {
+				callback(e);
+			}
+		});
+	};
+
+switch(process.argv[2]) {
+	case 'status':
+		getRunningPid(function(err, pid) {
+			if (!err) {
+				process.stdout.write('\nNodeBB Running '.bold + '(pid '.cyan + pid.toString().cyan + ')\n'.cyan);
+				process.stdout.write('\t"' + './nodebb stop'.yellow + '" to stop the NodeBB server\n');
+				process.stdout.write('\t"' + './nodebb log'.yellow + '" to view server output\n');
+				process.stdout.write('\t"' + './nodebb restart'.yellow + '" to restart NodeBB\n\n');
+			} else {
+				process.stdout.write('\nNodeBB is not running\n'.bold);
+				process.stdout.write('\t"' + './nodebb start'.yellow + '" to launch the NodeBB server\n\n');
+			}
+		})
+		break;
+
+	case 'start':
+		process.stdout.write('\nStarting NodeBB\n'.bold);
+		process.stdout.write('  "' + './nodebb stop'.yellow + '" to stop the NodeBB server\n');
+		process.stdout.write('  "' + './nodebb log'.yellow + '" to view server output\n');
+		process.stdout.write('  "' + './nodebb restart'.yellow + '" to restart NodeBB\n\n');
+
+		// Spawn a new NodeBB process
+		cproc.fork(__dirname + '/loader.js', {
+			env: process.env,
+			detatched: true
+		});
+		break;
+
+	case 'stop':
+		getRunningPid(function(err, pid) {
+			if (!err) {
+				process.kill(pid, 'SIGTERM');
+				process.stdout.write('Stopping NodeBB. Goodbye!\n')
+			} else {
+				process.stdout.write('NodeBB is already stopped.\n');
+			}
+		});
+		break;
+
+	case 'restart':
+		getRunningPid(function(err, pid) {
+			if (!err) {
+				process.kill(pid, 'SIGHUP');
+			} else {
+				process.stdout.write('NodeBB could not be restarted, as a running instance could not be found.');
+			}
+		});
+		break;
+
+	case 'reload':
+		getRunningPid(function(err, pid) {
+			if (!err) {
+				process.kill(pid, 'SIGUSR2');
+			} else {
+				process.stdout.write('NodeBB could not be reloaded, as a running instance could not be found.');
+			}
+		});
+		break;
+
+	case 'dev':
+		process.env.NODE_ENV = 'development';
+		cproc.fork(__dirname + '/loader.js', ['--no-daemon', '--no-silent'], {
+			env: process.env
+		});
+		break;
+
+	case 'log':
+		process.stdout.write('\nType '.red + 'Ctrl-C '.bold + 'to exit\n\n'.red);
+		cproc.spawn('tail', ['-F', './logs/output.log'], {
+			cwd: __dirname,
+			stdio: 'inherit'
+		});
+		break;
+
+	case 'setup':
+		cproc.fork('app.js', ['--setup'], {
+			cwd: __dirname,
+			silent: false
+		});
+		break;
+
+	case 'reset':
+		var args = process.argv.slice(0);
+		args.unshift('--reset');
+
+		cproc.fork('app.js', args, {
+			cwd: __dirname,
+			silent: false
+		});
+		break;
+
+	case 'upgrade':
+		async.series([
+			function(next) {
+				process.stdout.write('1. '.bold + 'Bringing base dependencies up to date\n'.yellow);
+				npm.load({
+					loglevel: 'silent'
+				}, function() {
+					npm.commands.install(next);
+				});
+			},
+			function(next) {
+				process.stdout.write('2. '.bold + 'Updating NodeBB data store schema\n'.yellow);
+				var upgradeProc = cproc.fork('app.js', ['--upgrade'], {
+					cwd: __dirname,
+					silent: false
+				});
+
+				upgradeProc.on('close', next)
+			},
+			function(next) {
+				process.stdout.write('3. '.bold + 'Storing upgrade date in "package.json"\n'.yellow);
+				touch(__dirname + '/package.json', {}, next);
+			}
+		], function(err) {
+			if (err) {
+				process.stdout.write('\nError'.red + ': ' + err.message + '\n');
+			} else {
+				var message = 'NodeBB Upgrade Complete!',
+					spaces = new Array(Math.floor(process.stdout.columns / 2) - (message.length / 2) + 1).join(' ');
+				process.stdout.write('\n' + spaces + message.green.bold + '\n\n');
+			}
+		});
+		break;
+
+	default:
+		process.stdout.write('\nWelcome to NodeBB\n\n'.bold);
+		process.stdout.write('Usage: ./nodebb {start|stop|reload|restart|log|setup|reset|upgrade|dev}\n\n');
+		process.stdout.write('\t' + 'start'.yellow + '\tStart the NodeBB server\n');
+		process.stdout.write('\t' + 'stop'.yellow + '\tStops the NodeBB server\n');
+		process.stdout.write('\t' + 'reload'.yellow + '\tRestarts NodeBB\n');
+		process.stdout.write('\t' + 'restart'.yellow + '\tRestarts NodeBB\n');
+		process.stdout.write('\t' + 'log'.yellow + '\tOpens the logging interface (useful for debugging)\n');
+		process.stdout.write('\t' + 'setup'.yellow + '\tRuns the NodeBB setup script\n');
+		process.stdout.write('\t' + 'reset'.yellow + '\tDisables all plugins, restores the default theme.\n');
+		process.stdout.write('\t' + 'upgrade'.yellow + '\tRun NodeBB upgrade scripts, ensure packages are up-to-date\n');
+		process.stdout.write('\t' + 'dev'.yellow + '\tStart NodeBB in interactive development mode\n');
+		process.stdout.write('\t' + 'watch'.yellow + '\tStart NodeBB in development mode and watch for changes\n');
+		process.stdout.write('\n');
+		break;
+}

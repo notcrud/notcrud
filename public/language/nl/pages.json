@@ -1,0 +1,21 @@
+{
+    "home": "Home",
+    "unread": "Ongelezen onderwerpen",
+    "popular": "Populaire onderwerpen",
+    "recent": "Recente onderwerpen",
+    "users": "Geregistreerde gebruikers",
+    "notifications": "Notificaties",
+    "tags": "Tags",
+    "tag": "Onderwerpen geplaatst onder \"%1\"",
+    "user.edit": "\"%1\" aanpassen",
+    "user.following": "Door %1 gevolgd",
+    "user.followers": "Die %1 volgen",
+    "user.posts": "Berichten geplaatst door %1",
+    "user.topics": "Onderwerpen begonnen door %1",
+    "user.groups": "%1's groepen",
+    "user.favourites": "Favoriete berichten van %1",
+    "user.settings": "Gebruikersinstellingen",
+    "user.watched": "Berichten die door %1 bekeken worden",
+    "maintenance.text": "%1 is momenteel in onderhoud. Excuses voor het ongemak en probeer het later nog eens",
+    "maintenance.messageIntro": "Daarnaast heeft de beheerder het volgende bericht achtergelaten:"
+}

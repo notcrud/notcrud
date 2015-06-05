@@ -1,0 +1,43 @@
+.category-list {
+	padding: 0;
+
+	li {
+		.inline-block;
+		.pointer;
+		padding: 0.5em;
+		margin: 0.25em;
+		.border-radius(3px);
+
+		&.disabled {
+			-webkit-filter: grayscale(30%);
+			.opacity(0.5);
+		}
+	}
+}
+
+.user-list {
+	padding-left: 2rem;
+	padding-top: 1rem;
+
+	li {
+		.pointer;
+		display: inline-block;
+		list-style-type: none;
+		padding: 0.5rem 1rem;
+
+		&:hover {
+			background: @gray-lighter;
+		}
+
+		img {
+			float: left;
+			max-width: 36px;
+			padding-right: 1rem;
+		}
+
+		span {
+			vertical-align: middle;
+			display: inline-block;
+		}
+	}
+}

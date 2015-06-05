@@ -1,0 +1,11 @@
+{
+    "username-email": "Gebruikersnaam / Email",
+    "username": "Gebruikersnaam",
+    "email": "Email",
+    "remember_me": "Aangemeld blijven?",
+    "forgot_password": "Wachtwoord vergeten?",
+    "alternative_logins": "Andere manieren van aanmelden",
+    "failed_login_attempt": "Aanmelden niet geslaagd. Probeer het nog eens.",
+    "login_successful": "Aanmelden geslaagd!",
+    "dont_have_account": "Geen gebruikersaccount?"
+}
