@@ -1,3 +1,4 @@
+[![Stories in Ready](https://badge.waffle.io/wingify/notcrud.png?label=ready&title=Ready)](https://waffle.io/wingify/notcrud)
 ### notCRUD
 
 notCRUD is a platform for fostering discussions and collaborations between people who're interested in building better software products in India. Check out [notcrud.com](http://notcrud.com) and be a part of it!
